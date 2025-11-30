@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wokwi Intelligent Agent (Node-RED)</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Real-time sensor monitoring and intelligent agent control for Wokwi IoT devices">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wokwi Agent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Wokwi Intelligent Agent <span style="font-size: 0.6em; color: #38bdf8;">(via Node-RED)</span></h1>
+            <div class="status-indicator">
+                <span id="mqtt-status" class="status-dot disconnected"></span>
+                <span id="mqtt-status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Charts Section -->
+        <section class="charts-grid">
+            <div class="card chart-card">
+                <h2>Temperature</h2>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="value-display" id="temp-value">-- °C</div>
+            </div>
+            <div class="card chart-card">
+                <h2>Humidity</h2>
+                <div class="chart-container">
+                    <canvas id="humidityChart"></canvas>
+                </div>
+                <div class="value-display" id="humidity-value">-- %</div>
+            </div>
+            <div class="card chart-card">
+                <h2>Water Flow</h2>
+                <div class="chart-container">
+                    <canvas id="flowChart"></canvas>
+                </div>
+                <div class="value-display" id="flow-value">-- L/h</div>
+            </div>
+        </section>
+
+        <!-- Recommendations Section - NOW DIRECTLY BELOW CHARTS -->
+        <section class="recommendations-section">
+            <div class="card recommendations-card">
+                <div class="card-header">
+                    <h2>Agent Recommendations</h2>
+                    <div class="status-badge" id="agent-status-badge">Active</div>
+                </div>
+                <div id="recommendations-container" class="recommendations-container">
+                    <!-- Recommendations will be injected here -->
+                    <div class="recommendation-item normal">
+                        <div class="rec-icon-wrapper">
+                            <span class="recommendation-icon">✓</span>
+                        </div>
+                        <div class="rec-content">
+                            <h3>System Normal</h3>
+                            <p>Waiting for data analysis...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Control Section -->
+        <section class="charts-grid">
+            <div class="card agent-card">
+                <div class="agent-header">
+                    <h2>Agent Core</h2>
+                    <div class="agent-controls">
+                        <button id="toggle-agent" class="btn primary">Stop Agent</button>
+                    </div>
+                </div>
+
+                <div class="agent-layout">
+                    <div class="agent-config">
+                        <h3>Thresholds</h3>
+                        <div class="input-group">
+                            <label>Max Temp (°C)</label>
+                            <input type="number" id="temp-threshold" value="30">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Temp (°C)</label>
+                            <input type="number" id="temp-min-threshold" value="15">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Humidity (%)</label>
+                            <input type="number" id="humidity-max-threshold" value="70">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Humidity (%)</label>
+                            <input type="number" id="humidity-min-threshold" value="30">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Flow (L/h)</label>
+                            <input type="number" id="flow-threshold" value="50">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Flow (L/h)</label>
+                            <input type="number" id="flow-min-threshold" value="10">
+                        </div>
+                    </div>
+
+                    <div class="agent-logs">
+                        <h3>Activity Log</h3>
+                        <div id="log-container" class="log-container">
+                            <div class="log-entry system">Agent initialized... waiting for data.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="app-nodered.js"></script>
+</body>
+
+</html>

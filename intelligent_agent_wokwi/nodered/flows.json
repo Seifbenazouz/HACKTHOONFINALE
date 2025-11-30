@@ -1,0 +1,237 @@
+[
+    {
+        "id": "mqtt_in_sensors",
+        "type": "mqtt in",
+        "z": "main_flow",
+        "name": "Wokwi Sensors",
+        "topic": "wokwi/sensors/sayf_project",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "mqtt_broker",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "process_data",
+                "debug_sensors"
+            ]
+        ]
+    },
+    {
+        "id": "process_data",
+        "type": "function",
+        "z": "main_flow",
+        "name": "Process Sensor Data",
+        "func": "// Parse incoming JSON\nlet data = msg.payload;\n\n// Add timestamp\ndata.timestamp = new Date().toISOString();\n\n// Validate data\nif (data.temp !== undefined && data.humidity !== undefined && data.flow !== undefined) {\n    msg.payload = data;\n    return msg;\n} else {\n    node.warn('Invalid sensor data received');\n    return null;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 100,
+        "wires": [
+            [
+                "ws_out",
+                "http_response",
+                "store_data"
+            ]
+        ]
+    },
+    {
+        "id": "ws_out",
+        "type": "websocket out",
+        "z": "main_flow",
+        "name": "WebSocket Broadcast",
+        "server": "ws_server",
+        "client": "",
+        "x": 650,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "http_in",
+        "type": "http in",
+        "z": "main_flow",
+        "name": "GET /api/sensors",
+        "url": "/api/sensors",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 200,
+        "wires": [
+            [
+                "get_latest_data"
+            ]
+        ]
+    },
+    {
+        "id": "get_latest_data",
+        "type": "function",
+        "z": "main_flow",
+        "name": "Get Latest Data",
+        "func": "msg.payload = flow.get('latestData') || {error: 'No data available'};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 200,
+        "wires": [
+            [
+                "http_response"
+            ]
+        ]
+    },
+    {
+        "id": "http_response",
+        "type": "http response",
+        "z": "main_flow",
+        "name": "HTTP Response",
+        "statusCode": "200",
+        "headers": {
+            "content-type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+        },
+        "x": 650,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "store_data",
+        "type": "function",
+        "z": "main_flow",
+        "name": "Store Latest",
+        "func": "flow.set('latestData', msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "http_in_actuator",
+        "type": "http in",
+        "z": "main_flow",
+        "name": "POST /api/actuator",
+        "url": "/api/actuator",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 300,
+        "wires": [
+            [
+                "process_actuator"
+            ]
+        ]
+    },
+    {
+        "id": "process_actuator",
+        "type": "function",
+        "z": "main_flow",
+        "name": "Process Actuator Command",
+        "func": "// Expected payload: {\"command\": \"ACT1:ON\"}\nlet command = msg.payload.command;\n\nif (command) {\n    msg.payload = command;\n    msg.topic = 'wokwi/actuators/sayf_project';\n    return [msg, {payload: {status: 'ok', command: command}}];\n} else {\n    msg.statusCode = 400;\n    return [null, {payload: {error: 'Invalid command'}}];\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 300,
+        "wires": [
+            [
+                "mqtt_out_actuator"
+            ],
+            [
+                "http_response"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_out_actuator",
+        "type": "mqtt out",
+        "z": "main_flow",
+        "name": "Wokwi Actuators",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker",
+        "x": 680,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "debug_sensors",
+        "type": "debug",
+        "z": "main_flow",
+        "name": "Debug Sensors",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 390,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "mqtt_broker",
+        "type": "mqtt-broker",
+        "name": "Mosquitto Public",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "nodered_client",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "ws_server",
+        "type": "websocket-listener",
+        "path": "/ws/sensors",
+        "wholemsg": "false"
+    },
+    {
+        "id": "main_flow",
+        "type": "tab",
+        "label": "Wokwi MQTT Bridge",
+        "disabled": false,
+        "info": ""
+    }
+]
